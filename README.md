@@ -1,5 +1,4 @@
 # IMS Take-Home Code Challenge
-The IMS Direct Take-Home Code Challenge
 
 This programming challenge will be used to assess your skill level with Blazor Server, ASP.NET 6, C#, HTML/CSS, and problem-solving abilities. We are looking for clean, expressive code that follows object-oriented principles and software development best practices. 
 
