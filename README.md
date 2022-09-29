@@ -1,7 +1,7 @@
 # IMS Take-Home Code Challenge
 The IMS Direct Take-Home Code Challenge
 
-This programming challenge will be used to assess your skill level with Blazor Server, ASP.NET 6, C#, and problem-solving abilities. We are looking for clean, expressive code that follows object-oriented principles and software development best practices. 
+This programming challenge will be used to assess your skill level with Blazor Server, ASP.NET 6, C#, HTML/CSS, and problem-solving abilities. We are looking for clean, expressive code that follows object-oriented principles and software development best practices. 
 
 *Download the project template to get started. The solution contains two project templates, one for the Blazor Server webpage and one for the API application. It will be up to you to design any object classes and services to replace the template files. Data is provided in the root of the solution folder: "Dogs For Adoption Data.xlsx"*
 
