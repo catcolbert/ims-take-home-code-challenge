@@ -1,0 +1,176 @@
+﻿@page "/fetchdogs"
+
+<PageTitle>Adoptable Dogs</PageTitle>
+
+@using WebApp.Data
+@inject AdoptableDogService DogService
+
+<h1>Adoptable Dogs</h1>
+
+<p>This component demonstrates fetching data from a service.</p>
+
+@if (dogs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <button type="button" class="btn btn-primary" @onclick="() => ToggleDisplay()">
+                @ShowDisplayType()
+            </button>
+        </div>
+    </div>
+    if (showAsTable)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name  <span style="font-size:10px;" @onclick="() => SortColumnBy(0)">@GetSortingSymbolForName()</span> </th>
+                    <th>Location</th>
+                    <th>Adoptable Date  <span style="font-size:10px;" @onclick="() => SortColumnBy(1)">@GetSortingSymbolForDate()</span> </th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var dg in dogs)
+                {
+                    <tr>
+                        <td>@dg.Name</td>
+                        <td><img src="@dg.ImageData" height="70" width="70" alt="@dg.Name" /></td>
+                        <td>@dg.Date.ToShortDateString()</td>
+                        <td>@dg.Description</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="search" @bind="searchText" class="form-control" />
+                    <button type="button" class="btn btn-primary" @onclick="() => SearchDog()">
+                        Search
+                    </button>
+                </div>
+                <div class="input-group">
+                    <button type="button" class="btn btn-default" @onclick="() => AddNewDog()">
+                        Add
+                    </button>
+                </div>
+                <div class="input-group">
+                    <h4>Sort Dogs By: </h4>
+                    <br />
+                    <div @onclick="() => SortColumnBy(0)">
+                        Name    <span class="badge bg-secondary" style="font-size:10px;">@GetSortingSymbolForName()</span>
+                    </div>
+                    <br />
+                    <div @onclick="() => SortColumnBy(1)">
+                        Date  <span class="badge bg-secondary" style="font-size:10px;">@GetSortingSymbolForDate()</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container">
+            <div class="row">
+                @foreach (var dg in dogs)
+                {
+                    <div class="col-4 dog-card-container">
+                        <div class="card" style="width: 18rem;">
+                            <img src="@dg.ImageData" alt="@dg.Name" height="120" class="card-img-top dog-image">
+                            <div class="card-body">
+                                <h5 class="card-title">@dg.Name</h5>
+
+                                <p class="card-text dog-description-text">@dg.Description</p>
+                                <p class="card-text"><i>@dg.Date.ToString("dddd, dd MMMM yyyy")</i></p>
+                                <hr>
+                                <p><a href="#" class="btn btn-primary">Adopt Dog</a></p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private bool showAsTable = false;
+
+    private string searchText = string.Empty;
+    private bool nameSortOrder = true;
+    private bool dateSortOrder = true;
+    private AdoptableDog[]? serverResponse;
+
+    private AdoptableDog[]? dogs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        serverResponse = await DogService.GetDogsAsync();
+        dogs = serverResponse.ToArray();
+    }
+    private void ToggleDisplay()
+    {
+        showAsTable = !showAsTable;
+    }
+
+    private string ShowDisplayType()
+    {
+        return showAsTable ? "As Grid" : "As Table";
+    }
+    private void SortColumnBy(int fld)
+    {
+        switch (fld)
+        {
+            case 0:
+                if (nameSortOrder)
+                {
+                    dogs = dogs.OrderBy(x => x.Name).ToArray();
+                }
+                else
+                {
+                    dogs = dogs.OrderByDescending(x => x.Name).ToArray();
+                }
+                nameSortOrder = !nameSortOrder;
+                break;
+            case 1:
+                if (dateSortOrder)
+                {
+                    dogs = dogs.OrderBy(x => x.Date).ToArray();
+                }
+                else
+                {
+                    dogs = dogs.OrderByDescending(x => x.Date).ToArray();
+                }
+                dateSortOrder = !dateSortOrder;
+                break;
+            default:
+                break;
+        }
+
+
+    }
+    private string GetSortingSymbolForName()
+    {
+        return nameSortOrder ? "ASC" : "DESC";
+    }
+    private string GetSortingSymbolForDate()
+    {
+        return dateSortOrder ? "ASC" : "DESC";
+    }
+    private void SearchDog()
+    {
+        dogs = serverResponse.ToArray();
+        if (!string.IsNullOrEmpty(searchText))
+            dogs = dogs.Where(x => x.Name.Contains(searchText) || x.Description.Contains(searchText)).ToArray();
+    }
+    private string AddNewDog()
+    {
+        return dateSortOrder ? "ASC" : "DESC";
+    }
+}
