@@ -62,3 +62,19 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+.dog-card-container {
+    margin-bottom: 20px;
+}
+
+.dog-image {
+    background-size: contain;
+    height: 150px;
+}
+
+.dog-description-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

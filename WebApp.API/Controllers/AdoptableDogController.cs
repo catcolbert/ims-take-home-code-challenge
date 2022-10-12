@@ -9,22 +9,55 @@ namespace WebApp.API.Controllers
     public class AdoptableDogController : ControllerBase
     {
         private readonly ILogger<AdoptableDogController> _logger;
+        private readonly IConfiguration _config;
 
-        public AdoptableDogController(ILogger<AdoptableDogController> logger)
+        public AdoptableDogController(ILogger<AdoptableDogController> logger, IConfiguration config)
         {
             _logger = logger;
+            _config = config;
+
+            string _DbFileName = _config.GetValue<string>("DbFileName");
+            string _SheetName = _config.GetValue<string>("SheetName");
+            ExcelHelper.Instance.Init(_DbFileName, _SheetName);
         }
 
         [HttpGet(Name = "GetAdoptableDogs")]
         public IEnumerable<AdoptableDog> Get()
         {
-            List<AdoptableDog> dogs = ExcelHelper.ReadAdoptionDogsSheetData("D:\\Projects\\BelWo\\IMS\\ims-take-home\\ims-take-home-code-challenge\\Dogs For Adoption Data.xlsx"); //TODO: RAVI
+            _logger.LogInformation("GetAdoptableDogs called");
+
+            DirectoryInfo dogsXlsDirInfo = VisualStudioProvider.TryGetSolutionDirectoryInfo();
+            if (dogsXlsDirInfo == null)
+                return Enumerable.Empty<AdoptableDog>();
+
+            List<AdoptableDog> dogs = ExcelHelper.Instance.ReadAdoptionDogsSheetData();
+            if (dogs == null)
+                return Enumerable.Empty<AdoptableDog>();
 
             foreach (var d in dogs)
             {
-                var imgData = System.IO.File.ReadAllBytes(Environment.CurrentDirectory + d.Location.Replace("/", "//"));
-                string _b64 = Convert.ToBase64String(imgData);
-                d.ImageData = String.Format("data:image/jpeg;base64,{0}", _b64);
+                if (!string.IsNullOrEmpty(d.Location))
+                {
+                    var dogFilePath = Directory.GetCurrentDirectory() + d.Location;
+                    string dogPicFile = dogFilePath.Replace("/", "//");
+                    var imgData = System.IO.File.ReadAllBytes(dogPicFile);
+                    string _b64 = Convert.ToBase64String(imgData);
+                    string dogFileExt = Path.GetExtension(dogPicFile).ToLower();
+                    string base64ImagePrefix = "jpeg"; //Default prefix
+                    switch (dogFileExt)
+                    {
+                        case "jpg":
+                            base64ImagePrefix = "jpeg";
+                            break;
+                        case "png":
+                            base64ImagePrefix = "png";
+                            break;
+                        default:
+
+                            break;
+                    }
+                    d.ImageData = String.Format("data:image/{1};base64,{0}", _b64, base64ImagePrefix);
+                }
             }
             return dogs.ToArray();
         }

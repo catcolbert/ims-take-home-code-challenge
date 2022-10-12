@@ -8,19 +8,77 @@ using System.Threading.Tasks;
 
 namespace WebApp.API
 {
-    public class ExcelHelper
+    public sealed class ExcelHelper
     {
         /// <summary>
-        /// Read AdoptableDog import file
+        /// The one and only Singleton instance. 
         /// </summary>
-        /// <param name="fileName">Path of importing file</param>
-        public static List<AdoptableDog> ReadAdoptionDogsSheetData(string fileName)
+        private static ExcelHelper instance = null;
+        private static readonly object padlock = new object();
+        private string _excelDataFile = string.Empty;
+        private string _excelFileName = string.Empty;
+        private string _sheetName = string.Empty;
+        private bool isInitialized = false;
+
+
+        /// <summary>
+        /// Private constructor
+        /// </summary>
+        private ExcelHelper()
         {
+           
+        }
+
+
+
+        /// <summary>
+        /// Gets the instance of the singleton object.
+        /// </summary>
+        public static ExcelHelper Instance
+        {
+            get
+            {
+                lock (padlock)
+                {
+                    if (instance == null)
+                    {
+                        instance = new ExcelHelper();
+                    }
+                    return instance;
+                }
+            }
+        }
+
+        public void Init(string _dbFile, string _sheet)
+        {
+            _excelFileName = _dbFile;
+            _sheetName = _sheet;
+            if (string.IsNullOrEmpty(_excelFileName))
+                throw new FileNotFoundException("Excel file name not found in config.");
+            if (string.IsNullOrEmpty(_sheetName))
+                _sheetName = "Sheet1";
+
+            DirectoryInfo dogsXlsDirInfo = VisualStudioProvider.TryGetSolutionDirectoryInfo();
+            if (dogsXlsDirInfo != null)
+                _excelDataFile = Path.Combine(dogsXlsDirInfo.FullName, _excelFileName);
+        
+            if(!File.Exists(_excelDataFile))
+                throw new FileNotFoundException("Excel db file not found.");
+
+        }
+        /// <summary>
+        /// Read AdoptableDog import file
+        /// </summary>        
+        public List<AdoptableDog> ReadAdoptionDogsSheetData()
+        {
+            if (isInitialized)
+                throw new InvalidOperationException("Not intialized yet.");
+
             List<AdoptableDog> adoptableDogs = new List<AdoptableDog>();
 
-            XLWorkbook workBook = new XLWorkbook(fileName);
+            XLWorkbook workBook = new XLWorkbook(_excelDataFile);
             //Read the first Sheet from Excel file.
-            IXLWorksheet workSheet = workBook.Worksheet("Sheet1"); //TODO: RAVI - Keep sheet name to config file
+            IXLWorksheet workSheet = workBook.Worksheet(_sheetName); 
             if (workSheet == null)
                 throw new Exception("Unable to read importing excel file.");
 
@@ -70,6 +128,32 @@ namespace WebApp.API
 
             }
             return adoptableDogs;
+        }
+
+        /// <summary>
+        /// Still in progress...
+        /// </summary>
+        /// <param name="dog"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="Exception"></exception>
+        public bool AddAdoptionDogsToSheet(AdoptableDog dog)
+        {
+            if (isInitialized)
+                throw new InvalidOperationException("Not intialized yet.");
+
+            List<AdoptableDog> adoptableDogs = new List<AdoptableDog>();
+
+            XLWorkbook workBook = new XLWorkbook(_excelDataFile);
+            //Read the first Sheet from Excel file.
+            IXLWorksheet workSheet = workBook.Worksheet(_sheetName); 
+            if (workSheet == null)
+                throw new Exception("Unable to read importing excel file.");
+
+            workSheet.Cell(workSheet.RowCount() + 1, 1).Value = "Test Dog" + DateTime.Now.ToString("HHmmss");
+            workBook.Save();
+
+            return true;
         }
 
     }
